@@ -1,7 +1,8 @@
+'''
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-
+'''
 # ---------------------------------------------------------------------------
 # Projeto 1 — Classificação MNIST
 #
@@ -16,4 +17,98 @@ from tensorflow.keras import layers
 #   7. Salvar o modelo treinado como "model.h5"
 # ---------------------------------------------------------------------------
 
-# insira seu código aqui
+import tensorflow as tf
+from tensorflow.keras import layers, models, callbacks
+ 
+# Reprodutibilidade
+tf.random.set_seed(42)
+ 
+# Restringir explicitamente a execução à CPU
+tf.config.set_visible_devices([], "GPU")
+ 
+ 
+def load_data():
+    (x_train_full, y_train_full), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+ 
+    # Normalização para [0, 1]
+    x_train_full = x_train_full.astype("float32") / 255.0
+    x_test = x_test.astype("float32") / 255.0
+ 
+    # Adiciona o canal (grayscale -> 1 canal)
+    x_train_full = x_train_full[..., tf.newaxis]
+    x_test = x_test[..., tf.newaxis]
+ 
+    return (x_train_full, y_train_full), (x_test, y_test)
+ 
+ 
+def build_model():
+    model = models.Sequential([
+        layers.Input(shape=(28, 28, 1)),
+ 
+        # Bloco convolucional 1
+        layers.Conv2D(32, (3, 3), padding="same", activation="relu"),
+        layers.BatchNormalization(),
+        layers.MaxPooling2D((2, 2)),
+ 
+        # Bloco convolucional 2
+        layers.Conv2D(64, (3, 3), padding="same", activation="relu"),
+        layers.BatchNormalization(),
+        layers.MaxPooling2D((2, 2)),
+ 
+        # Bloco convolucional 3
+        layers.Conv2D(64, (3, 3), padding="same", activation="relu"),
+        layers.BatchNormalization(),
+        layers.MaxPooling2D((2, 2)),
+ 
+        layers.Flatten(),
+        layers.Dense(128, activation="relu"),
+        layers.Dropout(0.4),
+        layers.Dense(10, activation="softmax"),
+    ])
+ 
+    model.compile(
+        optimizer="adam",
+        loss="sparse_categorical_crossentropy",
+        metrics=["accuracy"],
+    )
+    return model
+ 
+ 
+def main():
+    print("Carregando dataset MNIST...")
+    (x_train_full, y_train_full), (x_test, y_test) = load_data()
+    print(f"Treino+val: {x_train_full.shape}, Teste: {x_test.shape}")
+ 
+    model = build_model()
+    model.summary()
+ 
+    early_stopping = callbacks.EarlyStopping(
+        monitor="val_loss",
+        patience=3,
+        restore_best_weights=True,
+    )
+ 
+    history = model.fit(
+        x_train_full,
+        y_train_full,
+        epochs=15,
+        batch_size=128,
+        validation_split=0.1,  # split explícito treino/validação
+        callbacks=[early_stopping],
+        verbose=2,
+    )
+ 
+    val_accuracy = max(history.history["val_accuracy"])
+    print(f"\nAcurácia de validação final (melhor época): {val_accuracy:.4f}")
+ 
+    # Avaliação final no conjunto de teste (informativo, além da validação)
+    test_loss, test_accuracy = model.evaluate(x_test, y_test, verbose=0)
+    print(f"Acurácia no conjunto de teste: {test_accuracy:.4f}")
+ 
+    model.save("model.h5")
+    print("Modelo salvo em model.h5")
+ 
+ 
+if __name__ == "__main__":
+    main()
+ 

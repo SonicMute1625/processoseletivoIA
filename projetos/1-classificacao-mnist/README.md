@@ -85,28 +85,43 @@ projetos/1-classificacao-mnist/
 
 ## 📝 Relatório do Candidato
 
-👤 **Nome Completo:**
+👤 **Nome Completo: Luiz Felipe Miranda de Souza**
 
 ### 1️⃣ Resumo da Arquitetura do Modelo
 
-Descreva, em palavras, a arquitetura da CNN implementada em `train_model.py` (número de blocos convolucionais, uso de batch normalization/dropout, estratégia de validação/early stopping).
+A CNN implementada em "train_model.py" é composta por 3 blocos convolucionais, cada um formado por uma camada Conv2D seguida de BatchNormalization e MaxPooling2D (filtros: 32, 64 e 64, respectivamente, todos com kernel 3x3 e ativação ReLU).
+Após os blocos convolucionais, o volume é achatado (Flatten) e passa por uma camada densa de 128 neurônios com ativação ReLU, seguida de uma camada Dropout (taxa de 0.4) antes da camada de saída com 10 neurônios e ativação softmax (uma para cada dígito).
+
+Para o treinamento, foi utilizado um split explícito treino/validação de 90/10 (validation_split = 0.1) sobre o conjunto de treino do MNIST, com EarlyStopping monitorando a val_loss (paciência de 3 épocas e restauração dos melhores pesos).
+O treinamento foi limitado a no máximo 15 épocas e executado exclusivamente em CPU.
 
 ### 2️⃣ Bibliotecas Utilizadas
 
-Liste as principais bibliotecas utilizadas, preferencialmente com suas versões.
+- TensorFlow / Keras — 2.21.0
+- NumPy
 
 ### 3️⃣ Técnica de Otimização do Modelo
 
-Explique qual técnica foi utilizada para otimizar o modelo em `optimize_model.py`.
+Foi utilizada a técnica de Dynamic Range Quantization, aplicada via "tf.lite.TFLiteConverter" com "converter.optimizations = [tf.lite.Optimize.DEFAULT]".
+Essa técnica quantiza os pesos do modelo de ponto flutuante (float32) para uma representação de menor precisão, mantendo as ativações em float durante a inferência.
+Foi escolhida por não exigir um dataset representativo para calibração, sendo simples de aplicar e eficaz na redução do tamanho do modelo.
 
 ### 4️⃣ Resultados Obtidos
 
-Informe a acurácia de validação obtida e o tamanho dos arquivos `model.h5` e `model.tflite`.
+- Acurácia de validação final: 99,08%
+- Acurácia no conjunto de teste: 99,23%
+- Tamanho do "model.h5": 1610,9 KB
+- Tamanho do "model.tflite": 140,9 KB
+- Redução de tamanho após otimização: 91,3%
 
 ### 5️⃣ Comentários Adicionais (Opcional)
 
-Dificuldades encontradas, decisões técnicas importantes, limitações do modelo, aprendizados durante o desafio.
+Foi um projeto bem completo, dando pra aplicar os conhecimentos adquiridos na capacitação.
 
 ### 6️⃣ Exemplo de Inferência
 
-Cole a saída do terminal ao rodar `run_inference.py` (predito vs. real para as 5+ amostras), e comente brevemente se houve algum caso interessante (acerto ou erro) entre as amostras testadas.
+Amostra 1: predito=7 | real=7
+Amostra 2: predito=2 | real=2
+Amostra 3: predito=1 | real=1
+Amostra 4: predito=0 | real=0
+Amostra 5: predito=4 | real=4

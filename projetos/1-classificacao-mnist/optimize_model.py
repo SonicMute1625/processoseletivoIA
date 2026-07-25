@@ -12,4 +12,31 @@ import os
 #   4. Salvar o resultado como "model.tflite"
 # ---------------------------------------------------------------------------
 
-# insira seu código aqui
+tf.config.set_visible_devices([], "GPU")
+ 
+ 
+def main():
+    print("Carregando model.h5...")
+    model = tf.keras.models.load_model("model.h5")
+ 
+    converter = tf.lite.TFLiteConverter.from_keras_model(model)
+
+    converter.optimizations = [tf.lite.Optimize.DEFAULT]
+ 
+    tflite_model = converter.convert()
+ 
+    with open("model.tflite", "wb") as f:
+        f.write(tflite_model)
+ 
+    h5_size = os.path.getsize("model.h5") / 1024
+    tflite_size = os.path.getsize("model.tflite") / 1024
+ 
+    print(f"model.h5:     {h5_size:.1f} KB")
+    print(f"model.tflite: {tflite_size:.1f} KB")
+    print(f"Redução de tamanho: {(1 - tflite_size / h5_size) * 100:.1f}%")
+    print("Modelo otimizado salvo em model.tflite")
+ 
+ 
+if __name__ == "__main__":
+    main()
+ 
